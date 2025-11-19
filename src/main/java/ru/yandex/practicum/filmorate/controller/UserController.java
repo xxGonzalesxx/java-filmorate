@@ -34,7 +34,7 @@ public class UserController {
         log.info("Получен запрос на создание пользователя: {}", user);
 
         if (user.getEmail() == null || user.getEmail().isBlank()) {
-            log.error("Ошибка валидации: электронная почта не может быть пустой");
+            log.error("Ошибка валидации:электронная почта не может быть пустой");
             throw new ValidationException("электронная почта не может быть пустой");
         }
 
