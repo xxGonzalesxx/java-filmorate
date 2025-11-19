@@ -30,9 +30,7 @@ public class UserController {
     //Создание пользователя
     @PostMapping
     public User create(@RequestBody User user) {
-
         log.info("Получен запрос на создание пользователя: {}", user);
-
         if (user.getEmail() == null || user.getEmail().isBlank()) {
             log.error("Ошибка валидации:электронная почта не может быть пустой");
             throw new ValidationException("электронная почта не может быть пустой");
@@ -72,12 +70,11 @@ public class UserController {
     //Обновляем пользователя
     @PutMapping
     public User update(@RequestBody User user) {
-
         log.info("Получен запрос на обновление пользователя с ID: {}", user.getId());
 
-        if (user.getEmail() == null || user.getEmail().isBlank()) {
-            log.error("Ошибка валидации: электронная почта не может быть пустой");
-            throw new ValidationException("электронная почта не может быть пустой");
+        // ДОБАВИТЬ проверку здесь (в update):
+        if (!users.containsKey(user.getId())) {
+            throw new ValidationException("Пользователь с ID " + user.getId() + " не найден");
         }
 
         if (!user.getEmail().contains("@")) {

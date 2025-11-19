@@ -67,6 +67,10 @@ public class FilmController {
     public Film update(@RequestBody Film film) {
         log.info("Получен запрос на обновление фильма с ID: {}", film.getId());
 
+        if (!films.containsKey(film.getId())) {
+            throw new ValidationException("Фильм с ID " + film.getId() + " не найден");
+        }
+
         // Проверка названия
         if (film.getName() == null || film.getName().isBlank()) {
             log.error("Ошибка валидации: название не может быть пустым");
