@@ -1,4 +1,5 @@
 package ru.yandex.practicum.filmorate.service;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,12 @@ public class FilmService {
     private static final LocalDate VALID_RELEASE_DATE = LocalDate.of(1895, 12, 28);
 
     private final FilmStorage filmStorage;
+    private final UserService userService;  // Добавил
 
     @Autowired
-    public FilmService(FilmStorage filmStorage) {
+    public FilmService(FilmStorage filmStorage, UserService userService) {  // Добавил параметр
         this.filmStorage = filmStorage;
+        this.userService = userService;  // Добавил
     }
 
     public List<Film> getAllFilms() {
@@ -49,6 +52,10 @@ public class FilmService {
 
     public void addLike(Long filmId, Long userId) {
         Film film = getFilmById(filmId);
+
+        // Проверяем что пользователь существует
+        userService.getUserById(userId);  // Если пользователя нет - выбросит NotFoundException
+
         if (film.getLikedUserIds().contains(userId)) {
             throw new ValidationException("Пользователь уже поставил лайк этому фильму");
         }
@@ -59,6 +66,10 @@ public class FilmService {
 
     public void removeLike(Long filmId, Long userId) {
         Film film = getFilmById(filmId);
+
+        // Проверяем что пользователь существует
+        userService.getUserById(userId);  // Если пользователя нет - выбросит NotFoundException
+
         if (!film.getLikedUserIds().contains(userId)) {
             throw new NotFoundException("Лайк от пользователя " + userId + " не найден");
         }
