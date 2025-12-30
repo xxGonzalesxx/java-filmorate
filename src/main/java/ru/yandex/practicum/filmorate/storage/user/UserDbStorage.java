@@ -8,7 +8,6 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dao.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
-
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -25,9 +24,9 @@ public class UserDbStorage implements UserStorage {
     @Override
     public User create(User user) {
         String sql = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
-        
+
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        
+
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, user.getEmail());
@@ -36,7 +35,7 @@ public class UserDbStorage implements UserStorage {
             ps.setDate(4, user.getBirthday() != null ? Date.valueOf(user.getBirthday()) : null);
             return ps;
         }, keyHolder);
-        
+
         user.setId(keyHolder.getKey().longValue());
         return user;
     }
@@ -44,14 +43,14 @@ public class UserDbStorage implements UserStorage {
     @Override
     public User update(User user) {
         String sql = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
-        
+
         jdbcTemplate.update(sql,
                 user.getEmail(),
                 user.getLogin(),
                 user.getName(),
                 user.getBirthday() != null ? Date.valueOf(user.getBirthday()) : null,
                 user.getId());
-        
+
         return user;
     }
 
@@ -75,7 +74,6 @@ public class UserDbStorage implements UserStorage {
         return count != null && count > 0;
     }
 
-    // Методы для работы с друзьями
     public void addFriend(long userId, long friendId) {
         String sql = "INSERT INTO friends (user_id, friend_id) VALUES (?, ?)";
         jdbcTemplate.update(sql, userId, friendId);
@@ -87,19 +85,19 @@ public class UserDbStorage implements UserStorage {
     }
 
     public List<User> getFriends(long userId) {
-        String sql = "SELECT u.* FROM users u " +
-                    "JOIN friends f ON u.id = f.friend_id " +
-                    "WHERE f.user_id = ? " +
-                    "ORDER BY u.id";
+        String sql = "SELECT u.* FROM users u "
+                + "JOIN friends f ON u.id = f.friend_id "
+                + "WHERE f.user_id = ? "
+                + "ORDER BY u.id";
         return jdbcTemplate.query(sql, userMapper, userId);
     }
 
     public List<User> getCommonFriends(long userId, long otherId) {
-        String sql = "SELECT u.* FROM users u " +
-                    "JOIN friends f1 ON u.id = f1.friend_id " +
-                    "JOIN friends f2 ON u.id = f2.friend_id " +
-                    "WHERE f1.user_id = ? AND f2.user_id = ? " +
-                    "ORDER BY u.id";
+        String sql = "SELECT u.* FROM users u "
+                + "JOIN friends f1 ON u.id = f1.friend_id "
+                + "JOIN friends f2 ON u.id = f2.friend_id "
+                + "WHERE f1.user_id = ? AND f2.user_id = ? "
+                + "ORDER BY u.id";
         return jdbcTemplate.query(sql, userMapper, userId, otherId);
     }
 }

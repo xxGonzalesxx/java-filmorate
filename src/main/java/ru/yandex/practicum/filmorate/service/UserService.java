@@ -7,7 +7,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -50,14 +50,11 @@ public class UserService {
             throw new ValidationException("Пользователь не может добавить себя в друзья");
         }
 
-        // Проверяем существование пользователей
         getUserById(userId);
         getUserById(friendId);
 
-        // Используем методы UserDbStorage
-        if (userStorage instanceof ru.yandex.practicum.filmorate.storage.user.UserDbStorage) {
-            ru.yandex.practicum.filmorate.storage.user.UserDbStorage dbStorage = 
-                (ru.yandex.practicum.filmorate.storage.user.UserDbStorage) userStorage;
+        if (userStorage instanceof UserDbStorage) {
+            UserDbStorage dbStorage = (UserDbStorage) userStorage;
             dbStorage.addFriend(userId, friendId);
         } else {
             throw new ValidationException("Метод добавления друга не поддерживается");
@@ -67,14 +64,11 @@ public class UserService {
     }
 
     public void removeFriend(Long userId, Long friendId) {
-        // Проверяем существование пользователей
         getUserById(userId);
         getUserById(friendId);
 
-        // Используем методы UserDbStorage
-        if (userStorage instanceof ru.yandex.practicum.filmorate.storage.user.UserDbStorage) {
-            ru.yandex.practicum.filmorate.storage.user.UserDbStorage dbStorage = 
-                (ru.yandex.practicum.filmorate.storage.user.UserDbStorage) userStorage;
+        if (userStorage instanceof UserDbStorage) {
+            UserDbStorage dbStorage = (UserDbStorage) userStorage;
             dbStorage.removeFriend(userId, friendId);
         } else {
             throw new ValidationException("Метод удаления друга не поддерживается");
@@ -84,11 +78,10 @@ public class UserService {
     }
 
     public List<User> getFriends(Long userId) {
-        getUserById(userId); // Проверяем существование пользователя
-        
-        if (userStorage instanceof ru.yandex.practicum.filmorate.storage.user.UserDbStorage) {
-            ru.yandex.practicum.filmorate.storage.user.UserDbStorage dbStorage = 
-                (ru.yandex.practicum.filmorate.storage.user.UserDbStorage) userStorage;
+        getUserById(userId);
+
+        if (userStorage instanceof UserDbStorage) {
+            UserDbStorage dbStorage = (UserDbStorage) userStorage;
             return dbStorage.getFriends(userId);
         } else {
             throw new ValidationException("Метод получения друзей не поддерживается");
@@ -98,10 +91,9 @@ public class UserService {
     public List<User> getCommonFriends(Long userId, Long otherId) {
         getUserById(userId);
         getUserById(otherId);
-        
-        if (userStorage instanceof ru.yandex.practicum.filmorate.storage.user.UserDbStorage) {
-            ru.yandex.practicum.filmorate.storage.user.UserDbStorage dbStorage = 
-                (ru.yandex.practicum.filmorate.storage.user.UserDbStorage) userStorage;
+
+        if (userStorage instanceof UserDbStorage) {
+            UserDbStorage dbStorage = (UserDbStorage) userStorage;
             return dbStorage.getCommonFriends(userId, otherId);
         } else {
             throw new ValidationException("Метод получения общих друзей не поддерживается");

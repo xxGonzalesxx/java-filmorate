@@ -7,7 +7,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-
+import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -43,14 +43,11 @@ public class FilmService {
     }
 
     public void addLike(Long filmId, Long userId) {
-        // Проверяем что фильм и пользователь существуют
         getFilmById(filmId);
         userService.getUserById(userId);
 
-        // Используем методы FilmDbStorage
-        if (filmStorage instanceof ru.yandex.practicum.filmorate.storage.film.FilmDbStorage) {
-            ru.yandex.practicum.filmorate.storage.film.FilmDbStorage dbStorage = 
-                (ru.yandex.practicum.filmorate.storage.film.FilmDbStorage) filmStorage;
+        if (filmStorage instanceof FilmDbStorage) {
+            FilmDbStorage dbStorage = (FilmDbStorage) filmStorage;
             dbStorage.addLike(filmId, userId);
         } else {
             throw new ValidationException("Метод добавления лайка не поддерживается");
@@ -60,14 +57,11 @@ public class FilmService {
     }
 
     public void removeLike(Long filmId, Long userId) {
-        // Проверяем что фильм и пользователь существуют
         getFilmById(filmId);
         userService.getUserById(userId);
 
-        // Используем методы FilmDbStorage
-        if (filmStorage instanceof ru.yandex.practicum.filmorate.storage.film.FilmDbStorage) {
-            ru.yandex.practicum.filmorate.storage.film.FilmDbStorage dbStorage = 
-                (ru.yandex.practicum.filmorate.storage.film.FilmDbStorage) filmStorage;
+        if (filmStorage instanceof FilmDbStorage) {
+            FilmDbStorage dbStorage = (FilmDbStorage) filmStorage;
             dbStorage.removeLike(filmId, userId);
         } else {
             throw new ValidationException("Метод удаления лайка не поддерживается");
@@ -77,9 +71,8 @@ public class FilmService {
     }
 
     public List<Film> getPopularFilms(int count) {
-        if (filmStorage instanceof ru.yandex.practicum.filmorate.storage.film.FilmDbStorage) {
-            ru.yandex.practicum.filmorate.storage.film.FilmDbStorage dbStorage = 
-                (ru.yandex.practicum.filmorate.storage.film.FilmDbStorage) filmStorage;
+        if (filmStorage instanceof FilmDbStorage) {
+            FilmDbStorage dbStorage = (FilmDbStorage) filmStorage;
             return dbStorage.getPopularFilms(count);
         } else {
             throw new ValidationException("Метод получения популярных фильмов не поддерживается");
@@ -106,7 +99,7 @@ public class FilmService {
             log.error("Ошибка валидации: дата релиза не может быть раньше 28 декабря 1895 года");
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
         }
-        
+
         if (film.getMpa() == null) {
             log.error("Ошибка валидации: рейтинг MPA должен быть указан");
             throw new ValidationException("Рейтинг MPA должен быть указан");
