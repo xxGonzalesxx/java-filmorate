@@ -2,99 +2,113 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 class UserControllerTest {
 
     @Autowired
-    private UserController userController;
+    private MockMvc mockMvc;
 
-    @Test
-    void createUser_WithValidData_ShouldSuccess() {
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private User createValidUser() {
         User user = new User();
         user.setEmail("test@mail.ru");
         user.setLogin("testlogin");
         user.setName("Test User");
         user.setBirthday(LocalDate.of(1990, 1, 1));
-
-        User createdUser = userController.create(user);
-
-        assertNotNull(createdUser.getId());
-        assertEquals("test@mail.ru", createdUser.getEmail());
+        return user;
     }
 
     @Test
-    void createUser_WithEmptyEmail_ShouldThrowException() {
-        User user = new User();
+    void createUser_WithValidData_ShouldSuccess() throws Exception {
+        User user = createValidUser();
+        
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.email").value("test@mail.ru"));
+    }
+
+    @Test
+    void createUser_WithEmptyEmail_ShouldThrowException() throws Exception {
+        User user = createValidUser();
         user.setEmail("");
-        user.setLogin("testlogin");
-        user.setName("Test User");
-        user.setBirthday(LocalDate.of(1990, 1, 1));
-
-        assertThrows(ValidationException.class, () -> userController.create(user));
+        
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void createUser_WithEmailWithoutAt_ShouldThrowException() {
-        User user = new User();
+    void createUser_WithEmailWithoutAt_ShouldThrowException() throws Exception {
+        User user = createValidUser();
         user.setEmail("invalid-email");
-        user.setLogin("testlogin");
-        user.setName("Test User");
-        user.setBirthday(LocalDate.of(1990, 1, 1));
-
-        assertThrows(ValidationException.class, () -> userController.create(user));
+        
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void createUser_WithEmptyLogin_ShouldThrowException() {
-        User user = new User();
-        user.setEmail("test@mail.ru");
+    void createUser_WithEmptyLogin_ShouldThrowException() throws Exception {
+        User user = createValidUser();
         user.setLogin("");
-        user.setName("Test User");
-        user.setBirthday(LocalDate.of(1990, 1, 1));
-
-        assertThrows(ValidationException.class, () -> userController.create(user));
+        
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void createUser_WithLoginWithSpaces_ShouldThrowException() {
-        User user = new User();
-        user.setEmail("test@mail.ru");
+    void createUser_WithLoginWithSpaces_ShouldThrowException() throws Exception {
+        User user = createValidUser();
         user.setLogin("login with spaces");
-        user.setName("Test User");
-        user.setBirthday(LocalDate.of(1990, 1, 1));
-
-        assertThrows(ValidationException.class, () -> userController.create(user));
+        
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void createUser_WithEmptyName_ShouldUseLogin() {
-        User user = new User();
-        user.setEmail("test@mail.ru");
-        user.setLogin("testlogin");
+    void createUser_WithEmptyName_ShouldUseLogin() throws Exception {
+        User user = createValidUser();
         user.setName("");
-        user.setBirthday(LocalDate.of(1990, 1, 1));
-
-        User createdUser = userController.create(user);
-
-        assertEquals("testlogin", createdUser.getName());
+        
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("testlogin"));
     }
 
     @Test
-    void createUser_WithFutureBirthday_ShouldThrowException() {
-        User user = new User();
-        user.setEmail("test@mail.ru");
-        user.setLogin("testlogin");
-        user.setName("Test User");
-        user.setBirthday(LocalDate.now().plusDays(1)); // Завтрашняя дата
-
-        assertThrows(ValidationException.class, () -> userController.create(user));
+    void createUser_WithFutureBirthday_ShouldThrowException() throws Exception {
+        User user = createValidUser();
+        user.setBirthday(LocalDate.now().plusDays(1));
+        
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isBadRequest());
     }
 }
