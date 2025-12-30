@@ -36,7 +36,7 @@ class UserControllerTest {
     @Test
     void createUser_WithValidData_ShouldSuccess() throws Exception {
         User user = createValidUser();
-        
+
         mockMvc.perform(MockMvcRequestBuilders.post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)))
@@ -49,7 +49,7 @@ class UserControllerTest {
     void createUser_WithEmptyEmail_ShouldThrowException() throws Exception {
         User user = createValidUser();
         user.setEmail("");
-        
+
         mockMvc.perform(MockMvcRequestBuilders.post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)))
@@ -60,7 +60,7 @@ class UserControllerTest {
     void createUser_WithEmailWithoutAt_ShouldThrowException() throws Exception {
         User user = createValidUser();
         user.setEmail("invalid-email");
-        
+
         mockMvc.perform(MockMvcRequestBuilders.post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)))
@@ -71,7 +71,7 @@ class UserControllerTest {
     void createUser_WithEmptyLogin_ShouldThrowException() throws Exception {
         User user = createValidUser();
         user.setLogin("");
-        
+
         mockMvc.perform(MockMvcRequestBuilders.post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)))
@@ -82,7 +82,7 @@ class UserControllerTest {
     void createUser_WithLoginWithSpaces_ShouldThrowException() throws Exception {
         User user = createValidUser();
         user.setLogin("login with spaces");
-        
+
         mockMvc.perform(MockMvcRequestBuilders.post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)))
@@ -93,7 +93,7 @@ class UserControllerTest {
     void createUser_WithEmptyName_ShouldUseLogin() throws Exception {
         User user = createValidUser();
         user.setName("");
-        
+
         mockMvc.perform(MockMvcRequestBuilders.post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)))
@@ -105,7 +105,7 @@ class UserControllerTest {
     void createUser_WithFutureBirthday_ShouldThrowException() throws Exception {
         User user = createValidUser();
         user.setBirthday(LocalDate.now().plusDays(1));
-        
+
         mockMvc.perform(MockMvcRequestBuilders.post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)))

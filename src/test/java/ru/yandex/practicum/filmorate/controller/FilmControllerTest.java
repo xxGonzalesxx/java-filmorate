@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -32,18 +31,18 @@ class FilmControllerTest {
         film.setDescription("Valid Description");
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
         film.setDuration(120);
-        
+
         Mpa mpa = new Mpa();
         mpa.setId(1); // G
         film.setMpa(mpa);
-        
+
         return film;
     }
 
     @Test
     void createFilm_WithValidData_ShouldSuccess() throws Exception {
         Film film = createValidFilm();
-        
+
         mockMvc.perform(MockMvcRequestBuilders.post("/films")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(film)))
@@ -56,7 +55,7 @@ class FilmControllerTest {
     void createFilm_WithEmptyName_ShouldThrowException() throws Exception {
         Film film = createValidFilm();
         film.setName("");
-        
+
         mockMvc.perform(MockMvcRequestBuilders.post("/films")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(film)))
@@ -67,7 +66,7 @@ class FilmControllerTest {
     void createFilm_WithLongDescription_ShouldThrowException() throws Exception {
         Film film = createValidFilm();
         film.setDescription("A".repeat(201));
-        
+
         mockMvc.perform(MockMvcRequestBuilders.post("/films")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(film)))
@@ -78,7 +77,7 @@ class FilmControllerTest {
     void createFilm_WithInvalidReleaseDate_ShouldThrowException() throws Exception {
         Film film = createValidFilm();
         film.setReleaseDate(LocalDate.of(1890, 1, 1));
-        
+
         mockMvc.perform(MockMvcRequestBuilders.post("/films")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(film)))
@@ -89,7 +88,7 @@ class FilmControllerTest {
     void createFilm_WithNegativeDuration_ShouldThrowException() throws Exception {
         Film film = createValidFilm();
         film.setDuration(-10);
-        
+
         mockMvc.perform(MockMvcRequestBuilders.post("/films")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(film)))
@@ -100,7 +99,7 @@ class FilmControllerTest {
     void createFilm_WithoutMpa_ShouldThrowException() throws Exception {
         Film film = createValidFilm();
         film.setMpa(null);
-        
+
         mockMvc.perform(MockMvcRequestBuilders.post("/films")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(film)))

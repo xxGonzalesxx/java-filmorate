@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JdbcTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@ComponentScan(basePackages = {"ru.yandex.practicum.filmorate.dao.mapper", 
+@ComponentScan(basePackages = {"ru.yandex.practicum.filmorate.dao.mapper",
                                "ru.yandex.practicum.filmorate.storage.user"})
 class UserDbStorageTest {
     private final UserStorage userStorage;
@@ -37,7 +37,7 @@ class UserDbStorageTest {
     @Test
     void testCreateUser() {
         User createdUser = userStorage.create(testUser);
-        
+
         assertThat(createdUser).isNotNull();
         assertThat(createdUser.getId()).isPositive();
         assertThat(createdUser.getEmail()).isEqualTo(testUser.getEmail());
@@ -49,12 +49,12 @@ class UserDbStorageTest {
     @Test
     void testUpdateUser() {
         User createdUser = userStorage.create(testUser);
-        
+
         createdUser.setName("Updated Name");
         createdUser.setEmail("updated@example.com");
-        
+
         User updatedUser = userStorage.update(createdUser);
-        
+
         assertThat(updatedUser.getName()).isEqualTo("Updated Name");
         assertThat(updatedUser.getEmail()).isEqualTo("updated@example.com");
     }
@@ -62,9 +62,9 @@ class UserDbStorageTest {
     @Test
     void testFindUserById() {
         User createdUser = userStorage.create(testUser);
-        
+
         Optional<User> foundUser = userStorage.findById(createdUser.getId());
-        
+
         assertThat(foundUser)
                 .isPresent()
                 .hasValueSatisfying(user ->
@@ -75,16 +75,16 @@ class UserDbStorageTest {
     @Test
     void testFindAllUsers() {
         userStorage.create(testUser);
-        
+
         User anotherUser = new User();
         anotherUser.setEmail("another@example.com");
         anotherUser.setLogin("anotherLogin");
         anotherUser.setName("Another User");
         anotherUser.setBirthday(LocalDate.of(1995, 5, 5));
         userStorage.create(anotherUser);
-        
+
         List<User> users = userStorage.findAll();
-        
+
         assertThat(users).hasSize(2);
     }
 }
