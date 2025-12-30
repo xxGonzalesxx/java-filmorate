@@ -3,9 +3,12 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dao.GenreDao;
+import ru.yandex.practicum.filmorate.dao.MpaDao;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import java.time.LocalDate;
@@ -19,6 +22,8 @@ public class FilmService {
 
     private final FilmStorage filmStorage;
     private final UserService userService;
+    private final MpaDao mpaDao;
+    private final GenreDao genreDao;
 
     public List<Film> getAllFilms() {
         return filmStorage.findAll();
@@ -31,6 +36,21 @@ public class FilmService {
 
     public Film createFilm(Film film) {
         validateFilm(film);
+
+        // Проверяем существование MPA
+        if (!mpaDao.existsById(film.getMpa().getId())) {
+            throw new NotFoundException("MPA с id=" + film.getMpa().getId() + " не найден");
+        }
+
+        // Проверяем существование жанров
+        if (film.getGenres() != null) {
+            for (Genre genre : film.getGenres()) {
+                if (!genreDao.existsById(genre.getId())) {
+                    throw new NotFoundException("Жанр с id=" + genre.getId() + " не найден");
+                }
+            }
+        }
+
         return filmStorage.create(film);
     }
 
@@ -39,6 +59,21 @@ public class FilmService {
             throw new NotFoundException("Фильм с ID " + film.getId() + " не найден");
         }
         validateFilm(film);
+
+        // Проверяем существование MPA
+        if (!mpaDao.existsById(film.getMpa().getId())) {
+            throw new NotFoundException("MPA с id=" + film.getMpa().getId() + " не найден");
+        }
+
+        // Проверяем существование жанров
+        if (film.getGenres() != null) {
+            for (Genre genre : film.getGenres()) {
+                if (!genreDao.existsById(genre.getId())) {
+                    throw new NotFoundException("Жанр с id=" + genre.getId() + " не найден");
+                }
+            }
+        }
+
         return filmStorage.update(film);
     }
 
