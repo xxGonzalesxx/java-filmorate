@@ -7,9 +7,6 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Film.
- */
 @Getter
 @Setter
 public class Film {
@@ -18,5 +15,9 @@ public class Film {
     private String description;
     private LocalDate releaseDate;
     private int duration;
+    // Новое поле
+    private Mpa mpa;
+    // Изменено с likedUserIds
+    private Set<Genre> genres = new HashSet<>();
     private Set<Long> likedUserIds = new HashSet<>();
 }

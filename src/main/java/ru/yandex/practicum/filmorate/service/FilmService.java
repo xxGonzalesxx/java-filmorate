@@ -1,32 +1,29 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dao.GenreDao;
+import ru.yandex.practicum.filmorate.dao.MpaDao;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-
+import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class FilmService {
-    private static final Logger log = LoggerFactory.getLogger(FilmService.class);
     private static final LocalDate VALID_RELEASE_DATE = LocalDate.of(1895, 12, 28);
 
     private final FilmStorage filmStorage;
-    private final UserService userService;  // Добавил
-
-    @Autowired
-    public FilmService(FilmStorage filmStorage, UserService userService) {  // Добавил параметр
-        this.filmStorage = filmStorage;
-        this.userService = userService;  // Добавил
-    }
+    private final UserService userService;
+    private final MpaDao mpaDao;
+    private final GenreDao genreDao;
 
     public List<Film> getAllFilms() {
         return filmStorage.findAll();
@@ -39,6 +36,21 @@ public class FilmService {
 
     public Film createFilm(Film film) {
         validateFilm(film);
+
+        // Проверяем существование MPA
+        if (!mpaDao.existsById(film.getMpa().getId())) {
+            throw new NotFoundException("MPA с id=" + film.getMpa().getId() + " не найден");
+        }
+
+        // Проверяем существование жанров
+        if (film.getGenres() != null) {
+            for (Genre genre : film.getGenres()) {
+                if (!genreDao.existsById(genre.getId())) {
+                    throw new NotFoundException("Жанр с id=" + genre.getId() + " не найден");
+                }
+            }
+        }
+
         return filmStorage.create(film);
     }
 
@@ -47,42 +59,59 @@ public class FilmService {
             throw new NotFoundException("Фильм с ID " + film.getId() + " не найден");
         }
         validateFilm(film);
+
+        // Проверяем существование MPA
+        if (!mpaDao.existsById(film.getMpa().getId())) {
+            throw new NotFoundException("MPA с id=" + film.getMpa().getId() + " не найден");
+        }
+
+        // Проверяем существование жанров
+        if (film.getGenres() != null) {
+            for (Genre genre : film.getGenres()) {
+                if (!genreDao.existsById(genre.getId())) {
+                    throw new NotFoundException("Жанр с id=" + genre.getId() + " не найден");
+                }
+            }
+        }
+
         return filmStorage.update(film);
     }
 
     public void addLike(Long filmId, Long userId) {
-        Film film = getFilmById(filmId);
+        getFilmById(filmId);
+        userService.getUserById(userId);
 
-        // Проверяем что пользователь существует
-        userService.getUserById(userId);  // Если пользователя нет - выбросит NotFoundException
-
-        if (film.getLikedUserIds().contains(userId)) {
-            throw new ValidationException("Пользователь уже поставил лайк этому фильму");
+        if (filmStorage instanceof FilmDbStorage) {
+            FilmDbStorage dbStorage = (FilmDbStorage) filmStorage;
+            dbStorage.addLike(filmId, userId);
+        } else {
+            throw new ValidationException("Метод добавления лайка не поддерживается");
         }
-        film.getLikedUserIds().add(userId);
-        filmStorage.update(film);
+
         log.info("Пользователь {} поставил лайк фильму {}", userId, filmId);
     }
 
     public void removeLike(Long filmId, Long userId) {
-        Film film = getFilmById(filmId);
+        getFilmById(filmId);
+        userService.getUserById(userId);
 
-        // Проверяем что пользователь существует
-        userService.getUserById(userId);  // Если пользователя нет - выбросит NotFoundException
-
-        if (!film.getLikedUserIds().contains(userId)) {
-            throw new NotFoundException("Лайк от пользователя " + userId + " не найден");
+        if (filmStorage instanceof FilmDbStorage) {
+            FilmDbStorage dbStorage = (FilmDbStorage) filmStorage;
+            dbStorage.removeLike(filmId, userId);
+        } else {
+            throw new ValidationException("Метод удаления лайка не поддерживается");
         }
-        film.getLikedUserIds().remove(userId);
-        filmStorage.update(film);
+
         log.info("Пользователь {} удалил лайк с фильма {}", userId, filmId);
     }
 
     public List<Film> getPopularFilms(int count) {
-        return filmStorage.findAll().stream()
-                .sorted(Comparator.comparingInt(f -> -f.getLikedUserIds().size()))
-                .limit(count)
-                .collect(Collectors.toList());
+        if (filmStorage instanceof FilmDbStorage) {
+            FilmDbStorage dbStorage = (FilmDbStorage) filmStorage;
+            return dbStorage.getPopularFilms(count);
+        } else {
+            throw new ValidationException("Метод получения популярных фильмов не поддерживается");
+        }
     }
 
     private void validateFilm(Film film) {
@@ -104,6 +133,11 @@ public class FilmService {
         if (film.getReleaseDate().isBefore(VALID_RELEASE_DATE)) {
             log.error("Ошибка валидации: дата релиза не может быть раньше 28 декабря 1895 года");
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
+        }
+
+        if (film.getMpa() == null) {
+            log.error("Ошибка валидации: рейтинг MPA должен быть указан");
+            throw new ValidationException("Рейтинг MPA должен быть указан");
         }
     }
 }

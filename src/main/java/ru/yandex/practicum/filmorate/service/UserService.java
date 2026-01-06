@@ -1,29 +1,21 @@
 package ru.yandex.practicum.filmorate.service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserService {
-    private static final Logger log = LoggerFactory.getLogger(UserService.class);
-
     private final UserStorage userStorage;
-
-    @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
 
     public List<User> getAllUsers() {
         return userStorage.findAll();
@@ -58,53 +50,54 @@ public class UserService {
             throw new ValidationException("Пользователь не может добавить себя в друзья");
         }
 
-        User user = getUserById(userId);
-        User friend = getUserById(friendId);
+        getUserById(userId);
+        getUserById(friendId);
 
-        if (user.getFriendIds().contains(friendId)) {
-            throw new ValidationException("Пользователь уже добавлен в друзья");
+        if (userStorage instanceof UserDbStorage) {
+            UserDbStorage dbStorage = (UserDbStorage) userStorage;
+            dbStorage.addFriend(userId, friendId);
+        } else {
+            throw new ValidationException("Метод добавления друга не поддерживается");
         }
 
-        user.getFriendIds().add(friendId);
-        friend.getFriendIds().add(userId);
-
-        userStorage.update(user);
-        userStorage.update(friend);
-
-        log.info("Пользователь {} и пользователь {} теперь друзья", userId, friendId);
+        log.info("Пользователь {} добавил в друзья пользователя {}", userId, friendId);
     }
 
     public void removeFriend(Long userId, Long friendId) {
-        User user = getUserById(userId);
-        User friend = getUserById(friendId);
+        getUserById(userId);
+        getUserById(friendId);
 
+        if (userStorage instanceof UserDbStorage) {
+            UserDbStorage dbStorage = (UserDbStorage) userStorage;
+            dbStorage.removeFriend(userId, friendId);
+        } else {
+            throw new ValidationException("Метод удаления друга не поддерживается");
+        }
 
-        user.getFriendIds().remove(friendId);
-        friend.getFriendIds().remove(userId);
-
-        userStorage.update(user);
-        userStorage.update(friend);
-
-        log.info("Пользователь {} и пользователь {} больше не друзья", userId, friendId);
+        log.info("Пользователь {} удалил из друзей пользователя {}", userId, friendId);
     }
 
     public List<User> getFriends(Long userId) {
-        User user = getUserById(userId);
-        return user.getFriendIds().stream()
-                .map(this::getUserById)
-                .collect(Collectors.toList());
+        getUserById(userId);
+
+        if (userStorage instanceof UserDbStorage) {
+            UserDbStorage dbStorage = (UserDbStorage) userStorage;
+            return dbStorage.getFriends(userId);
+        } else {
+            throw new ValidationException("Метод получения друзей не поддерживается");
+        }
     }
 
     public List<User> getCommonFriends(Long userId, Long otherId) {
-        User user = getUserById(userId);
-        User other = getUserById(otherId);
+        getUserById(userId);
+        getUserById(otherId);
 
-        Set<Long> commonFriendIds = new HashSet<>(user.getFriendIds());
-        commonFriendIds.retainAll(other.getFriendIds());
-
-        return commonFriendIds.stream()
-                .map(this::getUserById)
-                .collect(Collectors.toList());
+        if (userStorage instanceof UserDbStorage) {
+            UserDbStorage dbStorage = (UserDbStorage) userStorage;
+            return dbStorage.getCommonFriends(userId, otherId);
+        } else {
+            throw new ValidationException("Метод получения общих друзей не поддерживается");
+        }
     }
 
     private void validateUser(User user) {
